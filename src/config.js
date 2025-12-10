@@ -1,0 +1,1 @@
+export const API_BASE_URL = "http://localhost:8000"; // change to your FastAPI URL
