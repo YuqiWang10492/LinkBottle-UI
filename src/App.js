@@ -10,6 +10,9 @@ import LinkDetailPage from "./pages/LinkDetailPage";
 import GoogleOAuthPage from "./pages/GoogleOAuthPage";
 import GitHubOAuthPage from "./pages/GitHubOAuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import SignupPage from "./pages/SignupPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
+import ForgetPasswordPage from "./pages/ForgetPasswordPage";
 
 function App() {
   const { token, user } = useAuth();
@@ -20,7 +23,9 @@ function App() {
       <Routes>
         <Route path="/oauth/google" element={<GoogleOAuthPage />} />
         <Route path="/oauth/github" element={<GitHubOAuthPage />} />
+        <Route path="/forgot-password" element={<ForgetPasswordPage />} />
         <Route path="*" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
       </Routes>
     );
   }
@@ -33,6 +38,7 @@ function App() {
         <Route path="bulk" element={<BulkUploadPage />} />
         <Route path="link/:id" element={<LinkDetailPage />} />
         <Route path="profile" element={<ProfilePage />} /> 
+        <Route path="profile/password" element={<ChangePasswordPage />} />
         {/* fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

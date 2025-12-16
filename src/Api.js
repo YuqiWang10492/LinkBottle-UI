@@ -49,7 +49,7 @@ export async function getCurrentUser(token) {
   return response.json();
 }
 
-export async function createShortLink({ original_url, title, alias }, token) {
+export async function createShortLink({ original_url, title, alias, generate_qr }, token) {
   const response = await fetch(`${API_BASE_URL}/shorten/`, {
     method: "POST",
     headers: {
@@ -60,6 +60,7 @@ export async function createShortLink({ original_url, title, alias }, token) {
       original_url,
       title: title || null,
       alias: alias || null,
+      generate_qr: !!generate_qr,
     }),
   });
 
@@ -110,8 +111,7 @@ export async function deleteLinkByKey(key, token) {
   return response.text();
 }
 
-// Get QR code image as a Blob
-export async function getLinkQrCode(key, token) {
+export async function generateQrCodePath(key, token) {
   const params = new URLSearchParams({ key });
 
   const response = await fetch(
@@ -125,12 +125,18 @@ export async function getLinkQrCode(key, token) {
   );
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw buildError(response, errorData.detail || "Failed to get QR code");
+    let message = "Failed to generate QR code";
+    try {
+      const data = await response.json();
+      if (data.detail) message = data.detail;
+    } catch {}
+    const err = new Error(message);
+    err.status = response.status;
+    throw err;
   }
 
-  const blob = await response.blob(); // image/png
-  return blob;
+  // Either full link or at least { qr_code_path: "..." }
+  return response.json();
 }
 
 // Fetch website title for a given URL
@@ -206,4 +212,119 @@ export async function oauthBindAccount(pendingToken, password) {
   }
 
   return response.json(); // { access_token, token_type }
+}
+
+// Get OTP code (for now, backend also returns the code in JSON)
+export async function requestOtp(email) {
+  const params = new URLSearchParams({ email });
+
+  const response = await fetch(
+    `${API_BASE_URL}/auth/otp/get-code/?${params.toString()}`,
+    {
+      method: "GET",
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to request OTP code";
+    try {
+      const data = await response.json();
+      if (data.detail) message = data.detail;
+    } catch {}
+    throw buildError(response, message);
+  }
+
+  return response.json(); // { detail, code }
+}
+
+// Create user
+export async function createUser(body) {
+  const response = await fetch(`${API_BASE_URL}/auth/create_user/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    let message = "Failed to create account";
+    try {
+      const data = await response.json();
+      if (data.detail) message = data.detail;
+    } catch {}
+    throw buildError(response, message);
+  }
+
+  // Body is just "User Created"; we don't actually need it
+  return response.text();
+}
+
+export async function changePassword({ old_password, new_password, otp }, token) {
+  const payload = {
+    new_password,
+    otp,
+  };
+
+  // Only include old_password if provided (and needed)
+  if (old_password) {
+    payload.old_password = old_password;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let message = "Failed to change password";
+    try {
+      const data = await response.json();
+      if (data.detail) message = data.detail;
+    } catch {}
+    const err = new Error(message);
+    err.status = response.status;
+    throw err;
+  }
+
+  // returns "Password Changed"
+  return response.text();
+}
+
+export async function forgetPassword({ email, new_password, otp }) {
+  const params = new URLSearchParams({ email });
+
+  const response = await fetch(
+    `${API_BASE_URL}/auth/forget-password?${params.toString()}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // ChangePasswordRequest body
+        new_password,
+        otp,
+        // old_password is *not* sent in forget-flow
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Failed to reset password";
+    try {
+      const data = await response.json();
+      if (data.detail) message = data.detail;
+    } catch {}
+    const err = new Error(message);
+    err.status = response.status;
+    return Promise.reject(err);
+  }
+
+  // returns "Password Changed"
+  return response.text();
 }

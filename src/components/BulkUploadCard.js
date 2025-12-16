@@ -17,11 +17,12 @@ function BulkUploadCard({ onFinished }) {
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => {
-        const [original_url, alias, title] = line.split(",").map((s) => s.trim());
+        const [original_url, alias, title, generate_qr] = line.split(",").map((s) => s.trim());
         return {
           original_url,
           alias: alias || null,
           title: title || null,
+          generate_qr: generate_qr === "1" || generate_qr === "true",
         };
       });
   }

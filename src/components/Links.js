@@ -11,6 +11,8 @@ export function ShortenLinkForm({ onCreate, errorFromLinks }) {
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
   const [customAlias, setCustomAlias] = useState(false);
+  const [generateQr, setGenerateQr] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const [titleTouched, setTitleTouched] = useState(false);
   const [loadingTitle, setLoadingTitle] = useState(false);
@@ -18,20 +20,29 @@ export function ShortenLinkForm({ onCreate, errorFromLinks }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!originalUrl.trim()) return;
+    if (!originalUrl.trim() || creating) return;
 
-    await onCreate({
-      original_url: originalUrl,
-      title: title || null,
-      alias: customAlias ? alias || null : null,
-    });
+    setCreating(true);
+    try {
+      await onCreate({
+        original_url: originalUrl,
+        title: title || null,
+        alias: customAlias ? alias || null : null,
+        generate_qr: generateQr,
+      });
 
-    setOriginalUrl("");
-    setTitle("");
-    setAlias("");
-    setCustomAlias(false);
-    setTitleTouched(false);
-    setTitleError("");
+      // keep your existing reset behavior
+      setOriginalUrl("");
+      setTitle("");
+      setAlias("");
+      setCustomAlias(false);
+      setGenerateQr(false);
+      setTitleTouched(false);
+      setTitleError("");
+    } finally {
+      // even if the parent reports an error, unlock the form
+      setCreating(false);
+    }
   }
 
   async function handleUrlBlur() {
@@ -40,7 +51,7 @@ export function ShortenLinkForm({ onCreate, errorFromLinks }) {
     try {
       setLoadingTitle(true);
       setTitleError("");
-      const fetchedTitle = await fetchLinkTitle(originalUrl, token);
+      const fetchedTitle = await fetchLinkTitle(originalUrl.trim(), token);
       if (!titleTouched || !title) {
         setTitle(fetchedTitle);
       }
@@ -82,22 +93,22 @@ export function ShortenLinkForm({ onCreate, errorFromLinks }) {
       {errorFromLinks && <p className="error-text">{errorFromLinks}</p>}
 
       <form onSubmit={handleSubmit} className="form">
-        <label className="form-label">
-          Long URL
-          <input
-            className="input"
-            type="url"
-            placeholder="https://example.com/very/long/url/path"
-            value={originalUrl}
-            onChange={(e) => setOriginalUrl(e.target.value)}
-            onBlur={handleUrlBlur}
-            required
-          />
-        </label>
+        <fieldset disabled={creating} style={{ border: "none", padding: 0, margin: 0 }}>
+          <label className="form-label">
+            Long URL
+            <input
+              className="input"
+              type="url"
+              placeholder="https://example.com/very/long/url/path"
+              value={originalUrl}
+              onChange={(e) => setOriginalUrl(e.target.value)}
+              onBlur={handleUrlBlur}
+              required
+            />
+          </label>
 
-        <label className="form-label">
-          Title (optional)
-          <div className="title-input-wrapper">
+          <label className="form-label">
+            Title (optional)
             <input
               className="input"
               value={title}
@@ -105,39 +116,52 @@ export function ShortenLinkForm({ onCreate, errorFromLinks }) {
               placeholder="Website title (auto-filled if empty)"
             />
             {loadingTitle && (
-              <span className="title-fetching">Fetching…</span>
+              <span className="title-fetching-below">Fetching…</span>
             )}
-          </div>
-          {titleError && (
-            <span className="error-text" style={{ fontSize: "12px" }}>
-              {titleError}
-            </span>
-          )}
-        </label>
-
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={customAlias}
-            onChange={(e) => setCustomAlias(e.target.checked)}
-          />
-          <span>Customize short link</span>
-        </label>
-
-        {customAlias && (
-          <label className="form-label">
-            Custom alias
-            <input
-              className="input"
-              value={alias}
-              onChange={(e) => setAlias(e.target.value)}
-              placeholder="my-custom-alias"
-            />
+            {titleError && (
+              <span className="error-text" style={{ fontSize: "12px" }}>
+                {titleError}
+              </span>
+            )}
           </label>
-        )}
 
-        <button className="btn-primary" type="submit">
-          ✨ Shorten Link
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={customAlias}
+              onChange={(e) => setCustomAlias(e.target.checked)}
+            />
+            <span>Customize short link</span>
+          </label>
+
+          {customAlias && (
+            <label className="form-label">
+              Custom alias
+              <input
+                className="input"
+                value={alias}
+                onChange={(e) => setAlias(e.target.value)}
+                placeholder="my-custom-alias"
+              />
+            </label>
+          )}
+
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={generateQr}
+              onChange={(e) => setGenerateQr(e.target.checked)}
+            />
+            <span>Generate QR code for this link</span>
+          </label>
+        </fieldset>
+
+        <button
+          className="btn-primary"
+          type="submit"
+          disabled={creating}
+        >
+          {creating ? "Creating short link…" : "✨ Shorten Link"}
         </button>
       </form>
     </section>

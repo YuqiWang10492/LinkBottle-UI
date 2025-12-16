@@ -2,9 +2,11 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getCurrentUser } from "../Api";
+import { useNavigate } from "react-router-dom";
 
 function ProfilePage() {
   const { token, handleApiError } = useAuth();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,20 +61,33 @@ function ProfilePage() {
     first_name,
     last_name,
     phone_number,
-    google_sub,
-    github_id,
-    email
+    email,
+    has_google_auth,
+    has_github_auth,
   } = profile;
 
-  const isGoogleLinked = !!google_sub;
-  const isGithubLinked = !!github_id;
+  const isGoogleLinked = !!has_google_auth;
+  const isGithubLinked = !!has_github_auth;
 
   return (
     <div className="card profile-card">
-      <h2 className="card-title">Profile</h2>
-      <p className="card-text">View your account information and linked providers.</p>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+        <div>
+          <h2 className="card-title">Profile</h2>
+          <p className="card-text">
+            View your account information and linked sign-in methods.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => navigate("/profile/password")}
+        >
+          Change password
+        </button>
+      </div>
 
-      <div className="profile-grid">
+      <div className="profile-grid" style={{ marginTop: 16 }}>
         <div className="profile-section">
           <h3 className="profile-section-title">Basic Info</h3>
           <div className="profile-row">
@@ -125,8 +140,6 @@ function ProfilePage() {
               </span>
             </span>
           </div>
-
-          {/* later you can add "Link/Unlink" buttons here */}
         </div>
       </div>
     </div>

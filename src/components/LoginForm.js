@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 import googleLogo from "../assets/google_logo.png";
@@ -32,7 +33,7 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="form">
           <label className="form-label">
-            Username
+            Username or Email
             <input
               className="input"
               value={username}
@@ -74,6 +75,19 @@ function LoginForm() {
           <img src={githubLogo} alt="GitHub" className="btn-github-logo" />
           <span>Sign in with GitHub</span>
         </button>
+
+        <p className="card-text" style={{ marginTop: 8 }}>
+          <Link to="/forgot-password" className="link-inline">
+            Forgot your password?
+          </Link>
+        </p>
+
+        <p className="card-text" style={{ marginTop: 12 }}>
+          Don’t have an account yet?{" "}
+          <Link to="/signup" className="link-inline">
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );
