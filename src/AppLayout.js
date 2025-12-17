@@ -2,6 +2,7 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import Header from "./components/Header";
+import NotificationBar from "./components/NotificationBar";
 
 function AppLayout() {
   return (
@@ -43,6 +44,7 @@ function AppLayout() {
 
         <div className="main-content">
           <Header />
+          <NotificationBar />
           <div className="page-content">
             <Outlet />
           </div>

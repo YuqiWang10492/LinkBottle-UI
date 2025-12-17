@@ -4,9 +4,11 @@ import BulkUploadCard from "../components/BulkUploadCard";
 import { LinksList } from "../components/Links";
 import { useAuth } from "../context/AuthContext";
 import { getLinks, deleteLinkByKey} from "../Api";
+import { useBulkUpload } from "../context/BulkUploadContext";
 
 function BulkUploadPage() {
   const { token, handleApiError } = useAuth();
+  const { registerLinksRefreshCallback } = useBulkUpload();
 
   const [links, setLinks] = useState([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
@@ -27,6 +29,11 @@ function BulkUploadPage() {
       setLoadingLinks(false);
     }
   }, [token, handleApiError]);
+
+  useEffect(() => {
+    // register (and update) callback
+    registerLinksRefreshCallback(reloadLinks);
+  }, [registerLinksRefreshCallback, reloadLinks]);
 
   // initial load
   useEffect(() => {

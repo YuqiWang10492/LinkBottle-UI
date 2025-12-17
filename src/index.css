@@ -614,6 +614,28 @@ body {
   color: #b91c1c;
 }
 
+.notification-bar {
+  position: relative; /* inside main content */
+  margin: 8px 0 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #16a34a; /* green success; tweak for dark theme */
+  color: #ffffff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notification-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 @media (max-width: 768px) {
   .profile-grid {
     grid-template-columns: 1fr;
